@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Nancy;
+using Nancy.ModelBinding;
 using Nancy.Responses.Negotiation;
 
 namespace LondonMovingSouth.CatalogService
@@ -17,31 +18,51 @@ namespace LondonMovingSouth.CatalogService
         {
             _repository = repository;
 
-            Get["/shopping/{count}/{offset}/{fromDate}/{toDate}"] = args => GetDrinks(args);
+            Get("/catalog/{count}/{offset}/{fromDate}/{toDate}", async args =>
+            {
+                try
+                {
+                    //Service
+                    IEnumerable<Product> products = await _repository.GetCatalogAsync(args.count, args.offset, args.fromDate, args.toDate);
 
-            Get["/shopping/{name}"] = args => GetDrink(args);
+                    if (products.ToList().Count == 0)
+                    {
+                        var errorMessage = new ErrorMessage { Message = "NotFound" };
+                        return await Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
+                    }
 
-            Post["/shopping/{name}/{quantity}"] = args => AddDrink(args);
+                    return await Negotiate.WithModel(products).WithStatusCode(HttpStatusCode.OK);
+                }
+                catch (Exception)
+                {
+                    var errorMessage = new ErrorMessage { Message = "InternalServerError" };
+                    return await Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.InternalServerError);
+                }
+            });
+            
+            Get("/shopping/{name}", async args => await GetProductAsync(args));
 
-            Put["/shopping/{name}/{quantity}"] = args => UpdateDrink(args);
+            Post("/shopping/{name}/{quantity}", async args => await AddProductAsync(args));
 
-            Delete["/shopping/{name}"] = args => DeleteDrink(args);
+            Put("/shopping/{name}/{quantity}", async args => await UpdateProductAsync(args));
+
+            Delete("/shopping/{name}", async args => await DeleteProductAsync(args));
         }
 
-        private Negotiator GetDrinks(dynamic args)
+        private async Task<Negotiator> GetCatalogAsync(dynamic args)
         {
             try
             {
                 //Service
-                List<Drink> drinkList = _repository.GetDrinksList(args.count, args.offset, args.fromDate, args.toDate);
+                IEnumerable<Product> products = await _repository.GetCatalogAsync(args.count, args.offset, args.fromDate, args.toDate);
 
-                if (drinkList.Count == 0)
+                if (products.ToList().Count == 0)
                 {
                     var errorMessage = new ErrorMessage { Message = "NotFound" };
                     return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
                 }
 
-                return Negotiate.WithModel(drinkList).WithStatusCode(HttpStatusCode.OK);
+                return Negotiate.WithModel(products).WithStatusCode(HttpStatusCode.OK);
             }
             catch (Exception)
             {
@@ -50,25 +71,13 @@ namespace LondonMovingSouth.CatalogService
             }
         }
 
-        private Negotiator GetDrink(dynamic args)
+        private async Task<Negotiator> GetProductAsync(dynamic args)
         {
             try
             {
-                var drinkModel = new DrinkModel { Name = args.name, Quantity = args.quantity, DateCreated = DateTime.UtcNow };
-
-                //Model Validation
-                var validateRequest = new ValidateRequest(new List<AbstractValidator<DrinkModel>> { new NameValidator() });
-
-                var validationResult = validateRequest.GetResult(drinkModel);
-
-                if (validationResult != "Passed request validations!")
-                {
-                    var errorMessage = new ErrorMessage { Message = validationResult };
-                    return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.BadRequest);
-                }
-
-                //Service
-                Drink result = _repository.GetDrink(args.name);
+                var product = new Product { Name = args.name, Summary = args.summary, DateFormatted = DateTime.UtcNow.ToString("dd-MM-yyyyHH:mm:ssZ"), Price = args.price };
+                
+                Product result = await _repository.GetProductAsync(args.name);
 
                 if (result == null)
                 {
@@ -85,26 +94,13 @@ namespace LondonMovingSouth.CatalogService
             }
         }
 
-        private Negotiator AddDrink(dynamic args)
+        private async Task<Negotiator> AddProductAsync(dynamic args)
         {
             try
             {
-                var drinkModel = new DrinkModel { Name = args.name, Quantity = args.quantity, DateCreated = DateTime.UtcNow };
-
-                //Model Validation
-                var validateRequest = new ValidateRequest(new List<AbstractValidator<DrinkModel>> { new NameValidator(), new FormatValidator(), new QuantityValidator() });
-
-                var validationResult = validateRequest.GetResult(drinkModel);
-
-                if (validationResult != "Passed request validations!")
-                {
-                    var errorMessage = new ErrorMessage { Message = validationResult };
-                    return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.BadRequest);
-                }
-
-                //Service
-                var drink = new Drink { Name = args.name, Quantity = args.quantity, DateCreated = DateTime.Now };
-                var result = _repository.AddDrink(drink);
+                var product = new Product { Name = args.name, Summary = args.summary, DateFormatted = DateTime.UtcNow.ToString("dd-MM-yyyyHH:mm:ssZ"), Price = args.price};
+                
+                var result = await _repository.AddProductAsync(product);
 
                 if (result == false)
                 {
@@ -112,7 +108,7 @@ namespace LondonMovingSouth.CatalogService
                     return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.BadRequest);
                 }
 
-                return Negotiate.WithModel(drink).WithStatusCode(HttpStatusCode.OK);
+                return Negotiate.WithModel(product).WithStatusCode(HttpStatusCode.OK);
             }
             catch (Exception)
             {
@@ -121,27 +117,13 @@ namespace LondonMovingSouth.CatalogService
             }
         }
 
-        private Negotiator UpdateDrink(dynamic args)
+        private async Task<Negotiator> UpdateProductAsync(dynamic args)
         {
             try
             {
-                //this.RequiresAuthentication();
-                var drinkModel = new DrinkModel { Name = args.name, Quantity = args.quantity };
-
-                //Model Validation
-                var validateRequest = new ValidateRequest(new List<AbstractValidator<DrinkModel>> { new NameValidator(), new FormatValidator(), new QuantityValidator() });
-
-                var validationResult = validateRequest.GetResult(drinkModel);
-
-                if (validationResult != "Passed request validations!")
-                {
-                    var errorMessage = new ErrorMessage { Message = validationResult };
-                    return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.BadRequest);
-                }
-
-                //Service
-                var drink = new Drink { Name = args.name, Quantity = args.quantity };
-                var result = _repository.UpdateDrink(drink);
+                var product = new Product { Name = args.name, Summary = args.summary, DateFormatted = DateTime.UtcNow.ToString("dd-MM-yyyyHH:mm:ssZ"), Price = args.price};
+                
+                var result = await _repository.UpdateProductAsync(product);
 
                 if (result == false)
                 {
@@ -159,26 +141,13 @@ namespace LondonMovingSouth.CatalogService
             }
         }
 
-        private Negotiator DeleteDrink(dynamic args)
+        private async Task<Negotiator> DeleteProductAsync(dynamic args)
         {
             try
             {
-                //this.RequiresAuthentication();
-                var drinkModel = new DrinkModel { Name = args.name, Quantity = args.quantity };
-
-                //Model Validation
-                var validateRequest = new ValidateRequest(new List<AbstractValidator<DrinkModel>> { new NameValidator() });
-
-                var validationResult = validateRequest.GetResult(drinkModel);
-
-                if (validationResult != "Passed request validations!")
-                {
-                    var errorMessage = new ErrorMessage { Message = validationResult };
-                    return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.BadRequest);
-                }
-
-                //Service
-                var result = _repository.DeleteDrink(args.name);
+                var product = new Product { Name = args.name, Summary = args.summary, DateFormatted = DateTime.UtcNow.ToString("dd-MM-yyyyHH:mm:ssZ"), Price = args.price };
+                
+                var result = await _repository.DeleteProductAsync(args.name);
 
                 if (result == false)
                 {
@@ -195,14 +164,5 @@ namespace LondonMovingSouth.CatalogService
                 return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.InternalServerError);
             }
         }
-    }
-
-    public interface ICatalogRepository
-    {
-        bool AddDrink(Product drink);
-        bool DeleteDrink(string name);
-        bool UpdateDrink(Product drink);
-        Product GetDrink(string name);
-        List<Product> GetDrinksList(string count, string offset, DateTime? fromDate, DateTime? toDate);
     }
 }
