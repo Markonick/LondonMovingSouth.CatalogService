@@ -18,35 +18,15 @@ namespace LondonMovingSouth.CatalogService
         {
             _repository = repository;
 
-            Get("/catalog/{count}/{offset}/{fromDate}/{toDate}", async args =>
-            {
-                try
-                {
-                    //Service
-                    IEnumerable<Product> products = await _repository.GetCatalogAsync(args.count, args.offset, args.fromDate, args.toDate);
-
-                    if (products.ToList().Count == 0)
-                    {
-                        var errorMessage = new ErrorMessage { Message = "NotFound" };
-                        return await Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
-                    }
-
-                    return await Negotiate.WithModel(products).WithStatusCode(HttpStatusCode.OK);
-                }
-                catch (Exception)
-                {
-                    var errorMessage = new ErrorMessage { Message = "InternalServerError" };
-                    return await Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.InternalServerError);
-                }
-            });
+            Get("/catalog/{count}/{offset}/{fromDate}/{toDate}", async args => await GetCatalogAsync(args));
             
-            Get("/shopping/{name}", async args => await GetProductAsync(args));
+            Get("/catalog/{name}", async args => await GetProductAsync(args));
 
-            Post("/shopping/{name}/{quantity}", async args => await AddProductAsync(args));
+            Post("/catalog/{name}/{quantity}", async args => await AddProductAsync(args));
 
-            Put("/shopping/{name}/{quantity}", async args => await UpdateProductAsync(args));
+            Put("/catalog/{name}/{quantity}", async args => await UpdateProductAsync(args));
 
-            Delete("/shopping/{name}", async args => await DeleteProductAsync(args));
+            Delete("/catalog/{name}", async args => await DeleteProductAsync(args));
         }
 
         private async Task<Negotiator> GetCatalogAsync(dynamic args)
