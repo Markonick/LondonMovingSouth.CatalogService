@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace LondonMovingSouth.CatalogService
@@ -100,20 +101,35 @@ namespace LondonMovingSouth.CatalogService
             }
         }
 
-        public async Task<Product> GetProductAsync(string name)
+        public async Task<Product> GetProductAsync(int id)
         {
-            var result =  new Product() { Name = name, DateFormatted = DateTime.UtcNow.ToShortTimeString(), Summary = "summary", Price = 100.00M };
-            await Task.Delay(5000);
-
-            return result;
+            using (_dbContext)
+            using (var dbContextTransaction = await _dbContext.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    return await _dbContext.Products.FindAsync(id);
+                }
+                catch (Exception exception)
+                {
+                    throw;
+                }
+            }
         }
 
         public async Task<IEnumerable<Product>> GetCatalogAsync(string count, string offset, DateTime? fromDate, DateTime? toDate)
         {
-            IEnumerable<Product> result = new List<Product>(){new Product(){Name = "name", DateFormatted = DateTime.UtcNow.ToShortTimeString(), Summary = "summary", Price = 100.00M}};
-            await Task.Delay(5000);
-
-            return result;
+            using (_dbContext)
+            {
+                try
+                {
+                    return await _dbContext.Products.ToListAsync();
+                }
+                catch (Exception exception)
+                {
+                    throw;
+                }
+            }
         }
     }
 }
