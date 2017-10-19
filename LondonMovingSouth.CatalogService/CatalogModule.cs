@@ -18,15 +18,15 @@ namespace LondonMovingSouth.CatalogService
         {
             _repository = repository;
 
-            Get("/catalog/{count}/{offset}/{fromDate}/{toDate}", async args => await GetCatalogAsync(args));
+            Get("/api/products/{count}/{offset}/{fromDate}/{toDate}", async args => await GetCatalogAsync(args));
             
-            Get("/catalog/{name}", async args => await GetProductAsync(args));
+            Get("/api/products/{id}", async args => await GetProductAsync(args));
 
-            Post("/catalog/{name}/{quantity}", async args => await AddProductAsync(args));
+            Post("/api/products/{id}", async args => await AddProductAsync(args));
 
-            Put("/catalog/{name}/{quantity}", async args => await UpdateProductAsync(args));
+            Put("/api/products/{id}", async args => await UpdateProductAsync(args));
 
-            Delete("/catalog/{name}", async args => await DeleteProductAsync(args));
+            Delete("/api/products/{id}", async args => await DeleteProductAsync(args));
         }
 
         private async Task<Negotiator> GetCatalogAsync(dynamic args)

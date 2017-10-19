@@ -11,27 +11,25 @@ namespace LondonMovingSouth.CatalogService
     public class CatalogRepository : ICatalogRepository
     {
         private readonly string _connectionString;
-        private readonly CatalogDbContext _dbContext;
         private readonly ILoggerFactory _loggerFactory;
 
-        public CatalogRepository(string connectionString, CatalogDbContext dbContext, ILoggerFactory loggerFactory)
+        public CatalogRepository(string connectionString, ILoggerFactory loggerFactory)
         {
             _connectionString = connectionString;
-            _dbContext = dbContext;
             _loggerFactory = loggerFactory;
         }
 
         public async Task<bool> AddProductAsync(Product product)
         {
-            using (_dbContext)
-            using (var dbContextTransaction = await _dbContext.Database.BeginTransactionAsync())
+            using (var dbContext = new CatalogDbContext())
+            using (var dbContextTransaction = await dbContext.Database.BeginTransactionAsync())
             {
                 try
                 {
                     const bool result = true;
 
-                    await _dbContext.Products.AddAsync(product);
-                    await _dbContext.SaveChangesAsync();
+                    await dbContext.Products.AddAsync(product);
+                    await dbContext.SaveChangesAsync();
                     dbContextTransaction.Commit();
 
                     return result;
@@ -47,16 +45,16 @@ namespace LondonMovingSouth.CatalogService
 
         public async Task<bool> DeleteProductAsync(int id)
         {
-            using (_dbContext)
-            using (var dbContextTransaction = await _dbContext.Database.BeginTransactionAsync())
+            using (var dbContext = new CatalogDbContext())
+            using (var dbContextTransaction = await dbContext.Database.BeginTransactionAsync())
             {
                 try
                 {
                     const bool result = true;
 
-                    var deleteProduct = await _dbContext.Products.FindAsync(id);
-                    _dbContext.Products.Remove(deleteProduct);
-                    await _dbContext.SaveChangesAsync();
+                    var deleteProduct = await dbContext.Products.FindAsync(id);
+                    dbContext.Products.Remove(deleteProduct);
+                    await dbContext.SaveChangesAsync();
 
                     dbContextTransaction.Commit();
 
@@ -72,14 +70,14 @@ namespace LondonMovingSouth.CatalogService
 
         public async Task<bool> UpdateProductAsync(Product product)
         {
-            using (_dbContext)
-            using (var dbContextTransaction = await _dbContext.Database.BeginTransactionAsync())
+            using (var dbContext = new CatalogDbContext())
+            using (var dbContextTransaction = await dbContext.Database.BeginTransactionAsync())
             {
                 try
                 {
                     const bool result = true;
 
-                    var updateProduct = await _dbContext.Products.FindAsync(product.Id);
+                    var updateProduct = await dbContext.Products.FindAsync(product.Id);
 
                     updateProduct.DetailId = product.DetailId;
                     updateProduct.Category = product.Category;
@@ -88,7 +86,7 @@ namespace LondonMovingSouth.CatalogService
                     updateProduct.Price = product.Price;
                     updateProduct.Summary = product.Summary;
 
-                    await _dbContext.SaveChangesAsync();
+                    await dbContext.SaveChangesAsync();
                     dbContextTransaction.Commit();
 
                     return result;
@@ -103,12 +101,12 @@ namespace LondonMovingSouth.CatalogService
 
         public async Task<Product> GetProductAsync(int id)
         {
-            using (_dbContext)
-            using (var dbContextTransaction = await _dbContext.Database.BeginTransactionAsync())
+            using (var dbContext = new CatalogDbContext())
+            using (var dbContextTransaction = await dbContext.Database.BeginTransactionAsync())
             {
                 try
                 {
-                    return await _dbContext.Products.FindAsync(id);
+                    return await dbContext.Products.FindAsync(id);
                 }
                 catch (Exception exception)
                 {
@@ -119,11 +117,11 @@ namespace LondonMovingSouth.CatalogService
 
         public async Task<IEnumerable<Product>> GetCatalogAsync(string count, string offset, DateTime? fromDate, DateTime? toDate)
         {
-            using (_dbContext)
+            using (var dbContext = new CatalogDbContext())
             {
                 try
                 {
-                    return await _dbContext.Products.ToListAsync();
+                    return await dbContext.Products.ToListAsync();
                 }
                 catch (Exception exception)
                 {
