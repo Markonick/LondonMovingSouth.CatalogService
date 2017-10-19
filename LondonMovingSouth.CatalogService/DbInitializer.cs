@@ -7,11 +7,11 @@ namespace LondonMovingSouth.CatalogService
 {
     public static class DbInitializer
     {
-        public static void Initialize(CatalogContext context)
+        public static void Initialize(CatalogDbContext dbContext)
         {
-            context.Database.EnsureCreated();
+            dbContext.Database.EnsureCreated();
 
-            if (context.Products.Any())
+            if (dbContext.Products.Any())
             {
                 return;
             }
@@ -22,7 +22,7 @@ namespace LondonMovingSouth.CatalogService
 
             for (var i = 0; i < numberOfProducts; i++)
             {
-                context.Products.Add(new Product
+                dbContext.Products.Add(new Product
                 {
                     Id = i,
                     DetailId = i,
@@ -33,7 +33,7 @@ namespace LondonMovingSouth.CatalogService
                     ModifiedDate = DateTime.UtcNow.ToString("g")
                 });
 
-                context.Details.Add(new Details
+                dbContext.Details.Add(new Details
                 {
                     Id = i,
                     Brand = "brand" + i,
@@ -49,7 +49,7 @@ namespace LondonMovingSouth.CatalogService
                 });
             }
 
-            context.SaveChanges();
+            dbContext.SaveChanges();
         }
     }
 }
