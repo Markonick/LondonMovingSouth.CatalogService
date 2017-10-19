@@ -36,13 +36,10 @@ namespace LondonMovingSouth.CatalogService
                 //Service
                 IEnumerable<Product> products = await _repository.GetCatalogAsync(args.count, args.offset, args.fromDate, args.toDate);
 
-                if (products.ToList().Count == 0)
-                {
-                    var errorMessage = new ErrorMessage { Message = "NotFound" };
-                    return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
-                }
+                if (products.ToList().Count != 0) return Negotiate.WithModel(products).WithStatusCode(HttpStatusCode.OK);
 
-                return Negotiate.WithModel(products).WithStatusCode(HttpStatusCode.OK);
+                var errorMessage = new ErrorMessage { Message = "NotFound" };
+                return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
             }
             catch (Exception)
             {
@@ -55,17 +52,12 @@ namespace LondonMovingSouth.CatalogService
         {
             try
             {
-                var product = new Product { Name = args.name, Summary = args.summary, DateFormatted = DateTime.UtcNow.ToString("dd-MM-yyyyHH:mm:ssZ"), Price = args.price };
-                
                 Product result = await _repository.GetProductAsync(args.name);
 
-                if (result == null)
-                {
-                    var errorMessage = new ErrorMessage { Message = "NotFound" };
-                    return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
-                }
+                if (result != null) return Negotiate.WithModel(result).WithStatusCode(HttpStatusCode.OK);
 
-                return Negotiate.WithModel(result).WithStatusCode(HttpStatusCode.OK);
+                var errorMessage = new ErrorMessage { Message = "NotFound" };
+                return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
             }
             catch (Exception)
             {
@@ -78,17 +70,24 @@ namespace LondonMovingSouth.CatalogService
         {
             try
             {
-                var product = new Product { Name = args.name, Summary = args.summary, DateFormatted = DateTime.UtcNow.ToString("dd-MM-yyyyHH:mm:ssZ"), Price = args.price};
+                var product = new Product
+                {
+                    Id = args.id,
+                    DetailId = args.detailId,
+                    Details = args.details,
+                    Category = args.category,
+                    Summary = args.summary,
+                    Price = args.price,
+                    CreatedDate = DateTime.UtcNow.ToString("dd-MM-yyyyHH:mm:ssZ"),
+                    ModifiedDate = DateTime.UtcNow.ToString("dd-MM-yyyyHH:mm:ssZ")
+                };
                 
                 var result = await _repository.AddProductAsync(product);
 
-                if (result == false)
-                {
-                    var errorMessage = new ErrorMessage { Message = "Error adding item" };
-                    return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.BadRequest);
-                }
+                if (result) return Negotiate.WithModel(product).WithStatusCode(HttpStatusCode.OK);
 
-                return Negotiate.WithModel(product).WithStatusCode(HttpStatusCode.OK);
+                var errorMessage = new ErrorMessage { Message = "Error adding item" };
+                return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.BadRequest);
             }
             catch (Exception)
             {
@@ -105,14 +104,14 @@ namespace LondonMovingSouth.CatalogService
                 
                 var result = await _repository.UpdateProductAsync(product);
 
-                if (result == false)
+                if (result)
                 {
-                    var errorMessage = new ErrorMessage { Message = "NotFound" };
-                    return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
+                    var message = new OkResponse {Message = "OK"};
+                    return Negotiate.WithModel(message).WithStatusCode(HttpStatusCode.OK);
                 }
 
-                var message = new OkResponse { Message = "OK" };
-                return Negotiate.WithModel(message).WithStatusCode(HttpStatusCode.OK);
+                var errorMessage = new ErrorMessage { Message = "NotFound" };
+                return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
             }
             catch (Exception)
             {
@@ -125,18 +124,16 @@ namespace LondonMovingSouth.CatalogService
         {
             try
             {
-                var product = new Product { Name = args.name, Summary = args.summary, DateFormatted = DateTime.UtcNow.ToString("dd-MM-yyyyHH:mm:ssZ"), Price = args.price };
-                
                 var result = await _repository.DeleteProductAsync(args.name);
 
-                if (result == false)
+                if (result)
                 {
-                    var errorMessage = new ErrorMessage { Message = "NotFound" };
-                    return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
+                    var message = new OkResponse {Message = "OK"};
+                    return Negotiate.WithModel(message).WithStatusCode(HttpStatusCode.OK);
                 }
 
-                var message = new OkResponse { Message = "OK" };
-                return Negotiate.WithModel(message).WithStatusCode(HttpStatusCode.OK);
+                var errorMessage = new ErrorMessage { Message = "NotFound" };
+                return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
             }
             catch (Exception)
             {
