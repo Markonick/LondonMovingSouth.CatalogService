@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LondonMovingSouth.CatalogService
 {
-    public class CatalogEntities : DbContext
+    public class CatalogContext : DbContext
     {
         public DbSet<Product> Products { get; set; }
         public DbSet<Details> Details { get; set; }

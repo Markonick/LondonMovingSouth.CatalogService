@@ -11,7 +11,6 @@ namespace LondonMovingSouth.CatalogService
     {
         public int Id { get; set; }
         public int DetailId { get; set; }
-        public Details Details { get; set; }
         public Category Category { get; set; }
         public string Summary { get; set; }
         public decimal Price { get; set; }

@@ -2,13 +2,13 @@
 {
     public class Details
     {
-        public string Id { get; set; }
+        public int Id { get; set; }
         public string Brand { get; set; }
         public string Description { get; set; }
         public string Dimensions { get; set; }
-        public decimal Weight { get; set; }
+        public string Weight { get; set; }
         public string Colour { get; set; }
         public int Quantity { get; set; }
-        public string Condition { get; set; }
+        public Condition Condition { get; set; }
     }
 }

@@ -70,17 +70,7 @@ namespace LondonMovingSouth.CatalogService
         {
             try
             {
-                var product = new Product
-                {
-                    Id = args.id,
-                    DetailId = args.detailId,
-                    Details = args.details,
-                    Category = args.category,
-                    Summary = args.summary,
-                    Price = args.price,
-                    CreatedDate = DateTime.UtcNow.ToString("dd-MM-yyyyHH:mm:ssZ"),
-                    ModifiedDate = DateTime.UtcNow.ToString("dd-MM-yyyyHH:mm:ssZ")
-                };
+                Product product = ProductBuilder(args);
                 
                 var result = await _repository.AddProductAsync(product);
 
@@ -100,7 +90,7 @@ namespace LondonMovingSouth.CatalogService
         {
             try
             {
-                var product = new Product { Name = args.name, Summary = args.summary, DateFormatted = DateTime.UtcNow.ToString("dd-MM-yyyyHH:mm:ssZ"), Price = args.price};
+                var product = ProductBuilder(args);
                 
                 var result = await _repository.UpdateProductAsync(product);
 
@@ -140,6 +130,21 @@ namespace LondonMovingSouth.CatalogService
                 var errorMessage = new ErrorMessage { Message = "InternalServerError" };
                 return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.InternalServerError);
             }
+        }
+
+        private static Product ProductBuilder(dynamic args)
+        {
+            var product = new Product
+            {
+                Id = args.id,
+                DetailId = args.detailId,
+                Category = args.category,
+                Summary = args.summary,
+                Price = args.price,
+                CreatedDate = DateTime.UtcNow.ToString("dd-MM-yyyyHH:mm:ssZ"),
+                ModifiedDate = DateTime.UtcNow.ToString("dd-MM-yyyyHH:mm:ssZ")
+            };
+            return product;
         }
     }
 }
