@@ -2,15 +2,25 @@
 
 namespace LondonMovingSouth.CatalogService
 {
-    public class CatalogDbContext : DbContext
+    public interface ICatalogDbContext
     {
-        public CatalogDbContext(DbContextOptions<CatalogDbContext> options) : base(options)
-        {
-            
-        }
+        DbSet<Product> Products { get; set; }
+        DbSet<Details> Details { get; set; }
+    }
 
+    public class CatalogDbContext : DbContext, ICatalogDbContext
+    {
+        private readonly string _connectionString;
         public DbSet<Product> Products { get; set; }
         public DbSet<Details> Details { get; set; }
+
+        public CatalogDbContext(string connectionString)
+        {
+            _connectionString = connectionString;
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+            => optionsBuilder.UseSqlServer(_connectionString);
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

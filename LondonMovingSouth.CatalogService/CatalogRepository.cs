@@ -1,27 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace LondonMovingSouth.CatalogService
 {
     public class CatalogRepository : ICatalogRepository
     {
         private readonly string _connectionString;
-        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _logger;
 
-        public CatalogRepository(string connectionString, ILoggerFactory loggerFactory)
+        public CatalogRepository(string connectionString, ILogger logger)
         {
             _connectionString = connectionString;
-            _loggerFactory = loggerFactory;
+            _logger = logger;
         }
 
         public async Task<bool> AddProductAsync(Product product)
         {
-            using (var dbContext = new CatalogDbContext())
+            using (var dbContext = new CatalogDbContext(_connectionString))
             using (var dbContextTransaction = await dbContext.Database.BeginTransactionAsync())
             {
                 try
@@ -29,14 +27,16 @@ namespace LondonMovingSouth.CatalogService
                     const bool result = true;
 
                     await dbContext.Products.AddAsync(product);
+
                     await dbContext.SaveChangesAsync();
+
                     dbContextTransaction.Commit();
 
                     return result;
                 }
-                catch (Exception exception)
+                catch (Exception ex)
                 {
-                    
+                    _logger.Debug(ex.Message);
                     dbContextTransaction.Rollback();
                     throw;
                 }
@@ -45,7 +45,7 @@ namespace LondonMovingSouth.CatalogService
 
         public async Task<bool> DeleteProductAsync(int id)
         {
-            using (var dbContext = new CatalogDbContext())
+            using (var dbContext = new CatalogDbContext(_connectionString))
             using (var dbContextTransaction = await dbContext.Database.BeginTransactionAsync())
             {
                 try
@@ -54,14 +54,16 @@ namespace LondonMovingSouth.CatalogService
 
                     var deleteProduct = await dbContext.Products.FindAsync(id);
                     dbContext.Products.Remove(deleteProduct);
+
                     await dbContext.SaveChangesAsync();
 
                     dbContextTransaction.Commit();
 
                     return result;
                 }
-                catch (Exception exception)
+                catch (Exception ex)
                 {
+                    _logger.Debug(ex.Message);
                     dbContextTransaction.Rollback();
                     throw;
                 }
@@ -70,7 +72,7 @@ namespace LondonMovingSouth.CatalogService
 
         public async Task<bool> UpdateProductAsync(Product product)
         {
-            using (var dbContext = new CatalogDbContext())
+            using (var dbContext = new CatalogDbContext(_connectionString))
             using (var dbContextTransaction = await dbContext.Database.BeginTransactionAsync())
             {
                 try
@@ -87,12 +89,14 @@ namespace LondonMovingSouth.CatalogService
                     updateProduct.Summary = product.Summary;
 
                     await dbContext.SaveChangesAsync();
+
                     dbContextTransaction.Commit();
 
                     return result;
                 }
-                catch (Exception exception)
+                catch (Exception ex)
                 {
+                    _logger.Debug(ex.Message);
                     dbContextTransaction.Rollback();
                     throw;
                 }
@@ -101,15 +105,15 @@ namespace LondonMovingSouth.CatalogService
 
         public async Task<Product> GetProductAsync(int id)
         {
-            using (var dbContext = new CatalogDbContext())
-            using (var dbContextTransaction = await dbContext.Database.BeginTransactionAsync())
+            using (var dbContext = new CatalogDbContext(_connectionString))
             {
                 try
                 {
                     return await dbContext.Products.FindAsync(id);
                 }
-                catch (Exception exception)
+                catch (Exception ex)
                 {
+                    _logger.Debug(ex.Message);
                     throw;
                 }
             }
@@ -117,14 +121,15 @@ namespace LondonMovingSouth.CatalogService
 
         public async Task<IEnumerable<Product>> GetCatalogAsync(string count, string offset, DateTime? fromDate, DateTime? toDate)
         {
-            using (var dbContext = new CatalogDbContext())
+            using (var dbContext = new CatalogDbContext(_connectionString))
             {
                 try
                 {
                     return await dbContext.Products.ToListAsync();
                 }
-                catch (Exception exception)
+                catch (Exception ex)
                 {
+                    _logger.Debug(ex.Message);
                     throw;
                 }
             }

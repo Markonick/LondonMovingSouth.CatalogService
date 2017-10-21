@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Serilog;
 using Microsoft.WindowsAzure.Storage;
 using Nancy;
 using Nancy.ModelBinding;
@@ -13,20 +14,22 @@ namespace LondonMovingSouth.CatalogService
     public class CatalogModule : NancyModule
     {
         private readonly ICatalogRepository _repository;
+        private readonly ILogger _logger;
 
-        public CatalogModule(ICatalogRepository repository)
+        public CatalogModule(ICatalogRepository repository, ILogger logger)
         {
             _repository = repository;
+            _logger = logger;
 
             Get("/api/products/{count}/{offset}/{fromDate}/{toDate}", async args => await GetCatalogAsync(args));
             
             Get("/api/products/{id}", async args => await GetProductAsync(args));
 
-            Post("/api/products/{id}", async args => await AddProductAsync(args));
+            Post("/api/products/add/{id}", async args => await AddProductAsync(args));
 
-            Put("/api/products/{id}", async args => await UpdateProductAsync(args));
+            Put("/api/products/edit/{id}", async args => await UpdateProductAsync(args));
 
-            Delete("/api/products/{id}", async args => await DeleteProductAsync(args));
+            Delete("/api/products/delete/{id}", async args => await DeleteProductAsync(args));
         }
 
         private async Task<Negotiator> GetCatalogAsync(dynamic args)
@@ -41,8 +44,9 @@ namespace LondonMovingSouth.CatalogService
                 var errorMessage = new ErrorMessage { Message = "NotFound" };
                 return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.Debug(ex.Message);
                 var errorMessage = new ErrorMessage { Message = "InternalServerError" };
                 return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.InternalServerError);
             }
@@ -59,8 +63,9 @@ namespace LondonMovingSouth.CatalogService
                 var errorMessage = new ErrorMessage { Message = "NotFound" };
                 return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.Debug(ex.Message);
                 var errorMessage = new ErrorMessage { Message = "InternalServerError" };
                 return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.InternalServerError);
             }
@@ -79,8 +84,9 @@ namespace LondonMovingSouth.CatalogService
                 var errorMessage = new ErrorMessage { Message = "Error adding item" };
                 return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.BadRequest);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.Debug(ex.Message);
                 var errorMessage = new ErrorMessage { Message = "InternalServerError" };
                 return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.InternalServerError);
             }
@@ -103,8 +109,9 @@ namespace LondonMovingSouth.CatalogService
                 var errorMessage = new ErrorMessage { Message = "NotFound" };
                 return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.Debug(ex.Message);
                 var errorMessage = new ErrorMessage { Message = "InternalServerError" };
                 return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.InternalServerError);
             }
@@ -125,8 +132,9 @@ namespace LondonMovingSouth.CatalogService
                 var errorMessage = new ErrorMessage { Message = "NotFound" };
                 return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.NotFound);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.Debug(ex.Message);
                 var errorMessage = new ErrorMessage { Message = "InternalServerError" };
                 return Negotiate.WithModel(errorMessage).WithStatusCode(HttpStatusCode.InternalServerError);
             }

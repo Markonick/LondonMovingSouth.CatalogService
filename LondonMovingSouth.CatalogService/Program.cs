@@ -1,8 +1,6 @@
-﻿using System;
-using Microsoft.AspNetCore;
+﻿using System.IO;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace LondonMovingSouth.CatalogService
 {
@@ -10,30 +8,17 @@ namespace LondonMovingSouth.CatalogService
     {
         public static void Main(string[] args)
         {
-            var host = BuildWebHost(args);
+            Log.Information("Starting web host");
 
-            using (var scope = host.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                try
-                {
-                    var context = services.GetRequiredService<CatalogDbContext>();
-                    DbInitializer.Initialize(context);
-                }
-                catch (Exception ex)
-                {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "An error occurred while seeding the database.");
-                }
-            }
+            var host = new WebHostBuilder()
+                .UseContentRoot(Directory.GetCurrentDirectory())
+                .UseKestrel()
+                .UseUrls("http://*:6666/")
+                .UseStartup<Startup>()
+                .UseSerilog()
+                .Build();
 
             host.Run();
         }
-
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseUrls("http://*:5002/")
-                .UseStartup<Startup>()
-                .Build();
     }
 }
