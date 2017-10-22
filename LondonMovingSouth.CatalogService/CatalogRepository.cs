@@ -19,7 +19,7 @@ namespace LondonMovingSouth.CatalogService
 
         public async Task<bool> AddProductAsync(Product product)
         {
-            using (var dbContext = new CatalogDbContext(_connectionString))
+            using (var dbContext = new CatalogDbContext())
             using (var dbContextTransaction = await dbContext.Database.BeginTransactionAsync())
             {
                 try
@@ -45,7 +45,7 @@ namespace LondonMovingSouth.CatalogService
 
         public async Task<bool> DeleteProductAsync(int id)
         {
-            using (var dbContext = new CatalogDbContext(_connectionString))
+            using (var dbContext = new CatalogDbContext())
             using (var dbContextTransaction = await dbContext.Database.BeginTransactionAsync())
             {
                 try
@@ -72,7 +72,7 @@ namespace LondonMovingSouth.CatalogService
 
         public async Task<bool> UpdateProductAsync(Product product)
         {
-            using (var dbContext = new CatalogDbContext(_connectionString))
+            using (var dbContext = new CatalogDbContext())
             using (var dbContextTransaction = await dbContext.Database.BeginTransactionAsync())
             {
                 try
@@ -105,7 +105,7 @@ namespace LondonMovingSouth.CatalogService
 
         public async Task<Product> GetProductAsync(int id)
         {
-            using (var dbContext = new CatalogDbContext(_connectionString))
+            using (var dbContext = new CatalogDbContext())
             {
                 try
                 {
@@ -121,7 +121,7 @@ namespace LondonMovingSouth.CatalogService
 
         public async Task<IEnumerable<Product>> GetCatalogAsync(string count, string offset, DateTime? fromDate, DateTime? toDate)
         {
-            using (var dbContext = new CatalogDbContext(_connectionString))
+            using (var dbContext = new CatalogDbContext())
             {
                 try
                 {

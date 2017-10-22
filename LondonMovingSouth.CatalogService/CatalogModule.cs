@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
-using Microsoft.WindowsAzure.Storage;
 using Nancy;
-using Nancy.ModelBinding;
 using Nancy.Responses.Negotiation;
 
 namespace LondonMovingSouth.CatalogService
 {
 
-    public class CatalogModule : NancyModule
+    public class CatalogModule : NancyModule, ICatalogModule
     {
         private readonly ICatalogRepository _repository;
         private readonly ILogger _logger;

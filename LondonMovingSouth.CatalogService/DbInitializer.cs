@@ -14,7 +14,6 @@ namespace LondonMovingSouth.CatalogService
                 return;
             }
 
-
             const int numberOfProducts = 10;
             var numOfConditions = Enum.GetValues(typeof(Condition)).Cast<int>().Last();
 

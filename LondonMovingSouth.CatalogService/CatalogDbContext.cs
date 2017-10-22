@@ -2,25 +2,20 @@
 
 namespace LondonMovingSouth.CatalogService
 {
-    public interface ICatalogDbContext
-    {
-        DbSet<Product> Products { get; set; }
-        DbSet<Details> Details { get; set; }
-    }
-
     public class CatalogDbContext : DbContext, ICatalogDbContext
     {
         private readonly string _connectionString;
         public DbSet<Product> Products { get; set; }
         public DbSet<Details> Details { get; set; }
 
+        public CatalogDbContext() { }
+
         public CatalogDbContext(string connectionString)
         {
             _connectionString = connectionString;
         }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-            => optionsBuilder.UseSqlServer(_connectionString);
+            => optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=LondonMovingSouthDb;Trusted_Connection=True;MultipleActiveResultSets=true");
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
